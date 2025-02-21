@@ -12,7 +12,7 @@ const asm_indent_delta = 2;
 
 pub const Error = Ast.RenderError;
 
-const Ais = AutoIndentingStream(std.ArrayList(u8).Writer);
+pub const Ais = AutoIndentingStream(std.ArrayList(u8).Writer);
 
 pub const Fixups = struct {
     /// The key is the mut token (`var`/`const`) of the variable declaration
@@ -72,7 +72,7 @@ pub const Fixups = struct {
     }
 };
 
-const Render = struct {
+pub const Render = struct {
     gpa: Allocator,
     ais: *Ais,
     tree: Ast,
@@ -324,7 +324,7 @@ fn renderMember(
 }
 
 /// Render all expressions in the slice, keeping empty lines where appropriate
-fn renderExpressions(r: *Render, expressions: []const Ast.Node.Index, space: Space) Error!void {
+pub fn renderExpressions(r: *Render, expressions: []const Ast.Node.Index, space: Space) Error!void {
     if (expressions.len == 0) return;
     try renderExpression(r, expressions[0], space);
     for (expressions[1..]) |expression| {
@@ -333,7 +333,7 @@ fn renderExpressions(r: *Render, expressions: []const Ast.Node.Index, space: Spa
     }
 }
 
-fn renderExpression(r: *Render, node: Ast.Node.Index, space: Space) Error!void {
+pub fn renderExpression(r: *Render, node: Ast.Node.Index, space: Space) Error!void {
     const tree = r.tree;
     const ais = r.ais;
     const token_tags = tree.tokens.items(.tag);

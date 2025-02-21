@@ -3676,7 +3676,7 @@ const Token = std.zig.Token;
 const Ast = @This();
 const Allocator = std.mem.Allocator;
 const Parse = @import("Parse.zig");
-const private_render = @import("./render.zig");
+pub const private_render = @import("./render.zig");
 
 test {
     _ = Parse;
