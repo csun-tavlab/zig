@@ -77,6 +77,13 @@ pub const Render = struct {
     ais: *Ais,
     tree: Ast,
     fixups: Fixups,
+    identifierLexemesWritten: ?*std.ArrayList([]const u8) = null,
+
+    pub fn maybeAddLexeme(self: *Render, lexeme: []const u8) !void {
+        if (self.identifierLexemesWritten) |list| {
+            try list.append(lexeme);
+        }
+    }
 };
 
 pub fn renderTree(buffer: *std.ArrayList(u8), tree: Ast, fixups: Fixups) Error!void {
@@ -2161,6 +2168,7 @@ fn renderArrayInit(
             .ais = &auto_indenting_stream,
             .tree = r.tree,
             .fixups = r.fixups,
+            .identifierLexemesWritten = r.identifierLexemesWritten,
         };
 
         // Calculate size of columns in current section
@@ -2813,12 +2821,13 @@ const QuoteBehavior = enum {
     eagerly_unquote_except_underscore,
 };
 
-fn renderIdentifier(r: *Render, token_index: Ast.TokenIndex, space: Space, quote: QuoteBehavior) Error!void {
+pub fn renderIdentifier(r: *Render, token_index: Ast.TokenIndex, space: Space, quote: QuoteBehavior) Error!void {
     const tree = r.tree;
     const token_tags = tree.tokens.items(.tag);
     assert(token_tags[token_index] == .identifier);
     const lexeme = tokenSliceForRender(tree, token_index);
-
+    try r.maybeAddLexeme(lexeme);
+    
     if (r.fixups.rename_identifiers.get(lexeme)) |mangled| {
         try r.ais.writer().writeAll(mangled);
         try renderSpace(r, token_index, lexeme.len, space);
@@ -3169,7 +3178,7 @@ fn discardAllParams(r: *Render, fn_proto_node: Ast.Node.Index) Error!void {
     }
 }
 
-fn tokenSliceForRender(tree: Ast, token_index: Ast.TokenIndex) []const u8 {
+pub fn tokenSliceForRender(tree: Ast, token_index: Ast.TokenIndex) []const u8 {
     var ret = tree.tokenSlice(token_index);
     switch (tree.tokens.items(.tag)[token_index]) {
         .container_doc_comment, .doc_comment => {
