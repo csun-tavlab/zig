@@ -78,10 +78,15 @@ pub const Render = struct {
     tree: Ast,
     fixups: Fixups,
     identifierLexemesWritten: ?*std.ArrayList([]const u8) = null,
+    skipNextLexeme: bool = false,
 
     pub fn maybeAddLexeme(self: *Render, lexeme: []const u8) !void {
-        if (self.identifierLexemesWritten) |list| {
-            try list.append(lexeme);
+        if (!self.skipNextLexeme) {
+            if (self.identifierLexemesWritten) |list| {
+                try list.append(lexeme);
+            }
+        } else {
+            self.skipNextLexeme = false;
         }
     }
 };
@@ -492,6 +497,7 @@ pub fn renderExpression(r: *Render, node: Ast.Node.Index, space: Space) Error!vo
                 ais.pushIndentOneShot();
             }
 
+            r.skipNextLexeme = true;
             return renderIdentifier(r, field_access.rhs, space, .eagerly_unquote); // field
         },
 
